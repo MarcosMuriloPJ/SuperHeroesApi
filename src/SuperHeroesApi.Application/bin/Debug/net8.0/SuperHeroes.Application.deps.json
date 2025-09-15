@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "SuperHeroes.Application/1.0.0": {
+        "dependencies": {
+          "SuperHeroes.Domain": "1.0.0"
+        },
+        "runtime": {
+          "SuperHeroes.Application.dll": {}
+        }
+      },
+      "SuperHeroes.Domain/1.0.0": {
+        "runtime": {
+          "SuperHeroes.Domain.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SuperHeroes.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SuperHeroes.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

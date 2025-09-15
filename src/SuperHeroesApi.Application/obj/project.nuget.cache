@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "4ZnsaTLZyuc=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Marckin\\Desktop\\DEV\\SuperHeroes\\SuperHeroesApi\\src\\SuperHeroesApi.Application\\SuperHeroesApi.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Marckin\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.11\\microsoft.netcore.app.ref.8.0.11.nupkg.sha512",
+    "C:\\Users\\Marckin\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.11\\microsoft.windowsdesktop.app.ref.8.0.11.nupkg.sha512",
+    "C:\\Users\\Marckin\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.11\\microsoft.aspnetcore.app.ref.8.0.11.nupkg.sha512"
+  ],
+  "logs": []
+}
