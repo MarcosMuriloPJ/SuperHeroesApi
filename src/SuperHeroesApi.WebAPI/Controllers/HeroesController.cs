@@ -87,7 +87,7 @@ namespace SuperHeroesApi.WebAPI.Controllers
         }
 
         var hero = await _heroService.CreateAsync(createHeroDto);
-        return CreatedAtAction(nameof(GetHeroById), new { id = hero.Id }, hero);
+        return Ok(new { message = "Super-herói atualizado com sucesso", data = hero });
       }
       catch (InvalidOperationException ex)
       {
