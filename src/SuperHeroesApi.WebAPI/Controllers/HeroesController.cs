@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SuperHeroesApi.Application.DTOs;
 using SuperHeroesApi.Application.Services;
@@ -76,6 +77,7 @@ namespace SuperHeroesApi.WebAPI.Controllers
     /// </summary>
     /// <param name="createHeroDto">Dados do super-herói a ser criado</param>
     /// <returns>Super-herói criado</returns>
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<HeroDto>> CreateHero([FromBody] CreateHeroDto createHeroDto)
     {
@@ -109,6 +111,7 @@ namespace SuperHeroesApi.WebAPI.Controllers
     /// <param name="id">ID do super-herói</param>
     /// <param name="updateHeroDto">Dados atualizados do super-herói</param>
     /// <returns>Super-herói atualizado</returns>
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<ActionResult<HeroDto>> UpdateHero(int id, [FromBody] UpdateHeroDto updateHeroDto)
     {
@@ -146,6 +149,7 @@ namespace SuperHeroesApi.WebAPI.Controllers
     /// </summary>
     /// <param name="id">ID do super-herói</param>
     /// <returns>Confirmação de exclusão</returns>
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteHero(int id)
     {
