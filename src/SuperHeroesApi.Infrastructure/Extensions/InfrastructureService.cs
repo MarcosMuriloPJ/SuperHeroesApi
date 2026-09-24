@@ -13,11 +13,23 @@ public static class InfrastructureService
   /// Adds the infrastructure services to the service collection.
   /// This includes setting up the database context, repositories and services.
   /// </summary>
-  public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+  /// <param name="services">Coleção de serviços à qual a infraestrutura será adicionada</param>
+  /// <param name="enableSensitiveDataLogging">
+  /// Habilita o log de dados sensíveis do EF Core (valores de parâmetros em logs/exceções).
+  /// Deve ser habilitado apenas em ambiente de desenvolvimento, nunca em produção, pois pode
+  /// vazar dados pessoais em logs e telemetria.
+  /// </param>
+  public static IServiceCollection AddInfrastructure(this IServiceCollection services, bool enableSensitiveDataLogging = false)
   {
     services.AddDbContext<SuperDbContext>(options =>
-        options.UseInMemoryDatabase("SuperHeroesDB")
-              .EnableSensitiveDataLogging());
+    {
+      options.UseInMemoryDatabase("SuperHeroesDB");
+
+      if (enableSensitiveDataLogging)
+      {
+        options.EnableSensitiveDataLogging();
+      }
+    });
 
     services.AddScoped<IHeroRepository, HeroRepository>();
     services.AddScoped<ISuperpowerRepository, SuperpowerRepository>();

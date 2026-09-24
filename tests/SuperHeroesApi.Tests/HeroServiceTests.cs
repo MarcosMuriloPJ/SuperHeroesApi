@@ -17,7 +17,7 @@ namespace SuperHeroesApi.Tests
     public HeroServiceTests()
     {
       var options = new DbContextOptionsBuilder<SuperDbContext>()
-          .UseInMemoryDatabase(databaseName: "SuperHeroes")
+          .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
           .Options;
 
       _context = new SuperDbContext(options);
