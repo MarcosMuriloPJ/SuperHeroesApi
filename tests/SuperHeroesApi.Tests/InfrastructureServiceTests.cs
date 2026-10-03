@@ -8,7 +8,8 @@ namespace SuperHeroesApi.Tests
 {
   /// <summary>
   /// Testes de segurança/configuração para o registro de infraestrutura.
-  /// Cobre a correção do achado F3 (EnableSensitiveDataLogging habilitado sem gate de ambiente).
+  /// Cobre a correção do achado F3 (EnableSensitiveDataLogging habilitado sem gate de ambiente)
+  /// e a migração do provedor de banco de dados para SQLite.
   /// </summary>
   public class InfrastructureServiceTests
   {
@@ -77,6 +78,24 @@ namespace SuperHeroesApi.Tests
       Assert.NotNull(provider.GetService<SuperHeroesApi.Domain.Interfaces.ISuperpowerRepository>());
       Assert.NotNull(provider.GetService<SuperHeroesApi.Application.Services.IHeroService>());
       Assert.NotNull(provider.GetService<SuperHeroesApi.Application.Services.ISuperpowerService>());
+    }
+
+    [Fact]
+    public void AddInfrastructure_ShouldConfigureSqliteProvider_WithGivenConnectionString()
+    {
+      // Arrange
+      var services = new ServiceCollection();
+      const string connectionString = "Data Source=infrastructure-service-test.db";
+
+      // Act
+      services.AddInfrastructure(connectionString);
+      using var provider = services.BuildServiceProvider();
+      using var scope = provider.CreateScope();
+      var context = scope.ServiceProvider.GetRequiredService<SuperDbContext>();
+
+      // Assert
+      Assert.True(context.Database.IsRelational());
+      Assert.Equal(connectionString, context.Database.GetConnectionString());
     }
   }
 }

@@ -1,5 +1,7 @@
 using System.Text;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SuperHeroesApi.Infrastructure.Data;
 using SuperHeroesApi.Infrastructure.Extensions;
@@ -11,7 +13,29 @@ builder.Services.AddControllers();
 // Registers infrastructure services
 // EnableSensitiveDataLogging só é habilitado em desenvolvimento para evitar vazamento
 // de dados sensíveis em logs/exceções em produção.
-builder.Services.AddInfrastructure(enableSensitiveDataLogging: builder.Environment.IsDevelopment());
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' não configurada. Configure 'ConnectionStrings:DefaultConnection' " +
+        "em appsettings.json ou em uma variável de ambiente antes de iniciar a aplicação.");
+
+builder.Services.AddInfrastructure(
+    connectionString,
+    enableSensitiveDataLogging: builder.Environment.IsDevelopment());
+
+builder.Services.AddApiVersioning(options =>
+{
+  options.DefaultApiVersion = new ApiVersion(1, 0);
+  options.AssumeDefaultVersionWhenUnspecified = true;
+  options.ReportApiVersions = true;
+  options.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc().AddApiExplorer(options =>
+{
+  options.GroupNameFormat = "'v'VVV";
+  options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<SuperDbContext>("database");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -117,10 +141,20 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Aplica migrations pendentes em bancos relacionais (SQLite/produção). Para provedores
+// não relacionais usados em testes (ex.: InMemory), Migrate() não é suportado, então recorremos
+// a EnsureCreated() para criar o esquema a partir do modelo.
 using (var scope = app.Services.CreateScope())
 {
   var context = scope.ServiceProvider.GetRequiredService<SuperDbContext>();
-  context.Database.EnsureCreated();
+  if (context.Database.IsRelational())
+  {
+    context.Database.Migrate();
+  }
+  else
+  {
+    context.Database.EnsureCreated();
+  }
 }
 
 // Configure the HTTP request pipeline.
@@ -142,6 +176,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Endpoint de health check para monitoramento/orquestradores (ex.: liveness/readiness probes).
+app.MapHealthChecks("/health");
 
 app.Run();
 

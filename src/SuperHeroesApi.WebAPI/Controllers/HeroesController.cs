@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using SuperHeroesApi.Application.DTOs;
 using SuperHeroesApi.Application.Services;
 
@@ -9,7 +10,8 @@ namespace SuperHeroesApi.WebAPI.Controllers
   /// Controller para gerenciamento de super-heróis
   /// </summary>
   [ApiController]
-  [Route("api/[controller]")]
+  [ApiVersion("1.0")]
+  [Route("api/v{version:apiVersion}/[controller]")]
   public class HeroesController(IHeroService heroService) : ControllerBase
   {
     /// <summary>
@@ -19,22 +21,19 @@ namespace SuperHeroesApi.WebAPI.Controllers
 
 
     /// <summary>
-    /// Obtém todos os super-heróis cadastrados
+    /// Obtém super-heróis cadastrados, com suporte a paginação, filtros e ordenação
     /// </summary>
-    /// <returns>Lista de super-heróis</returns>
+    /// <param name="queryParameters">
+    /// Parâmetros de consulta: Page, PageSize, Name, HeroName, SuperpowerId, SortBy, SortDescending
+    /// </param>
+    /// <returns>Página de super-heróis</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<HeroDto>>> GetAllHeroes()
+    public async Task<ActionResult<PagedResultDto<HeroDto>>> GetAllHeroes([FromQuery] HeroQueryParameters queryParameters)
     {
       try
       {
-        var heroes = await _heroService.GetAllAsync();
-
-        if (!heroes.Any())
-        {
-          return Ok(new { message = "Nenhum super-herói encontrado", data = heroes });
-        }
-
-        return Ok(heroes);
+        var result = await _heroService.GetPagedAsync(queryParameters);
+        return Ok(result);
       }
       catch (Exception ex)
       {

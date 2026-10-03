@@ -17,7 +17,7 @@ namespace SuperHeroesApi.Tests.Integration
 
     private static HttpRequestMessage BuildPreflightRequest(string origin)
     {
-      var request = new HttpRequestMessage(HttpMethod.Options, "/api/heroes");
+      var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/heroes");
       request.Headers.Add("Origin", origin);
       request.Headers.Add("Access-Control-Request-Method", "POST");
       return request;

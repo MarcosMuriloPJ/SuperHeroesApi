@@ -22,10 +22,11 @@ namespace SuperHeroesApi.Application.Services
     Task<HeroDto?> GetByIdAsync(int id);
 
     /// <summary>
-    /// Obtém todos os heróis cadastrados
+    /// Obtém heróis de forma paginada, com suporte a filtros e ordenação
     /// </summary>
-    /// <returns>Coleção de DTOs de heróis</returns>
-    Task<IEnumerable<HeroDto>> GetAllAsync();
+    /// <param name="queryParameters">Parâmetros de paginação, filtro e ordenação</param>
+    /// <returns>Página de DTOs de heróis</returns>
+    Task<PagedResultDto<HeroDto>> GetPagedAsync(HeroQueryParameters queryParameters);
 
     /// <summary>
     /// Atualiza um herói existente

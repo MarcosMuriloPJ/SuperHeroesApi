@@ -48,13 +48,28 @@ namespace SuperHeroesApi.Application.Services
     }
 
     /// <summary>
-    /// Obtém todos os heróis cadastrados
+    /// Obtém heróis de forma paginada, com suporte a filtros e ordenação
     /// </summary>
-    /// <returns>Coleção de DTOs de heróis</returns>
-    public async Task<IEnumerable<HeroDto>> GetAllAsync()
+    /// <param name="queryParameters">Parâmetros de paginação, filtro e ordenação</param>
+    /// <returns>Página de DTOs de heróis</returns>
+    public async Task<PagedResultDto<HeroDto>> GetPagedAsync(HeroQueryParameters queryParameters)
     {
-      var heroes = await _repo.GetAllAsync();
-      return heroes.Select(HeroMapper.ToDto);
+      var (items, totalCount) = await _repo.GetPagedAsync(
+          queryParameters.Page,
+          queryParameters.PageSize,
+          queryParameters.Name,
+          queryParameters.HeroName,
+          queryParameters.SuperpowerId,
+          queryParameters.SortBy.ToString(),
+          queryParameters.SortDescending);
+
+      return new PagedResultDto<HeroDto>
+      {
+        Items = items.Select(HeroMapper.ToDto),
+        Page = queryParameters.Page,
+        PageSize = queryParameters.PageSize,
+        TotalCount = totalCount
+      };
     }
 
     /// <summary>
