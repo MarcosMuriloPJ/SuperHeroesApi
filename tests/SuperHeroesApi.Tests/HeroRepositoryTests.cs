@@ -117,5 +117,70 @@ namespace SuperHeroesApi.Tests
       _context.Dispose();
       GC.SuppressFinalize(this);
     }
+
+    private async Task<Hero> SeedHeroAsync(string name, string heroName, int? superpowerId = null, double height = 1.80, double weight = 80.0, int ageYears = 30)
+    {
+      var hero = new Hero
+      {
+        Name = name,
+        HeroName = heroName,
+        Birthdate = DateTime.Now.AddYears(-ageYears),
+        Height = height,
+        Weight = weight,
+        HerosSuperpowers = superpowerId.HasValue ? [new HeroSuperpower { SuperpowerId = superpowerId.Value }] : []
+      };
+
+      return await _repo.AddAsync(hero);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldRespectPageAndPageSize()
+    {
+      for (var i = 1; i <= 5; i++)
+      {
+        await SeedHeroAsync($"Civil {i}", $"Hero {i}");
+      }
+
+      var (items, totalCount) = await _repo.GetPagedAsync(page: 2, pageSize: 2, name: null, heroName: null, superpowerId: null, sortBy: "Name", sortDescending: false);
+
+      Assert.Equal(5, totalCount);
+      Assert.Equal(2, items.Count());
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldFilterByHeroName()
+    {
+      await SeedHeroAsync("Clark Kent", "Superman");
+      await SeedHeroAsync("Bruce Wayne", "Batman");
+
+      var (items, totalCount) = await _repo.GetPagedAsync(page: 1, pageSize: 10, name: null, heroName: "man", superpowerId: null, sortBy: "Name", sortDescending: false);
+
+      Assert.Equal(2, totalCount);
+      Assert.All(items, h => Assert.Contains("man", h.HeroName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldFilterBySuperpowerId()
+    {
+      await SeedHeroAsync("Barry Allen", "Flash", superpowerId: 6);
+      await SeedHeroAsync("Clark Kent", "Superman", superpowerId: 2);
+
+      var (items, totalCount) = await _repo.GetPagedAsync(page: 1, pageSize: 10, name: null, heroName: null, superpowerId: 6, sortBy: "Name", sortDescending: false);
+
+      Assert.Equal(1, totalCount);
+      Assert.Equal("Flash", items.Single().HeroName);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldSortDescendingByHeight()
+    {
+      await SeedHeroAsync("Herói Baixo", "Baixo", height: 1.60);
+      await SeedHeroAsync("Herói Alto", "Alto", height: 2.10);
+
+      var (items, _) = await _repo.GetPagedAsync(page: 1, pageSize: 10, name: null, heroName: null, superpowerId: null, sortBy: "Height", sortDescending: true);
+
+      Assert.Equal("Alto", items.First().HeroName);
+      Assert.Equal("Baixo", items.Last().HeroName);
+    }
   }
 }

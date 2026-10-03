@@ -214,6 +214,45 @@ namespace SuperHeroesApi.Tests
       await Assert.ThrowsAsync<ArgumentException>(() => _heroService.DeleteAsync(999));
     }
 
+    [Fact]
+    public async Task GetPagedAsync_ShouldReturnEmptyPage_WhenNoHeroesExist()
+    {
+      var result = await _heroService.GetPagedAsync(new HeroQueryParameters());
+
+      Assert.Empty(result.Items);
+      Assert.Equal(0, result.TotalCount);
+      Assert.Equal(0, result.TotalPages);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldReturnPagedAndSortedResults()
+    {
+      await _heroRepo.AddAsync(new Hero { Name = "Diana Prince", HeroName = "Wonder Woman", Birthdate = DateTime.Now.AddYears(-29), Height = 1.80, Weight = 74 });
+      await _heroRepo.AddAsync(new Hero { Name = "Arthur Curry", HeroName = "Aquaman", Birthdate = DateTime.Now.AddYears(-32), Height = 1.90, Weight = 100 });
+      await _heroRepo.AddAsync(new Hero { Name = "Bruce Wayne", HeroName = "Batman", Birthdate = DateTime.Now.AddYears(-35), Height = 1.88, Weight = 85 });
+
+      var queryParameters = new HeroQueryParameters { Page = 1, PageSize = 2, SortBy = HeroSortBy.HeroName };
+
+      var result = await _heroService.GetPagedAsync(queryParameters);
+
+      Assert.Equal(3, result.TotalCount);
+      Assert.Equal(2, result.Items.Count());
+      Assert.Equal(2, result.TotalPages);
+      Assert.Equal("Aquaman", result.Items.First().HeroName);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_ShouldFilterByName()
+    {
+      await _heroRepo.AddAsync(new Hero { Name = "Clark Kent", HeroName = "Superman", Birthdate = DateTime.Now.AddYears(-30), Height = 1.85, Weight = 80 });
+      await _heroRepo.AddAsync(new Hero { Name = "Bruce Wayne", HeroName = "Batman", Birthdate = DateTime.Now.AddYears(-35), Height = 1.88, Weight = 85 });
+
+      var result = await _heroService.GetPagedAsync(new HeroQueryParameters { Name = "Clark" });
+
+      Assert.Equal(1, result.TotalCount);
+      Assert.Equal("Superman", result.Items.Single().HeroName);
+    }
+
     public void Dispose()
     {
       _context.Dispose();

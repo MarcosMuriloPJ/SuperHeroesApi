@@ -14,16 +14,22 @@ public static class InfrastructureService
   /// This includes setting up the database context, repositories and services.
   /// </summary>
   /// <param name="services">Coleção de serviços à qual a infraestrutura será adicionada</param>
+  /// <param name="connectionString">
+  /// Connection string do banco de dados SQLite (ex.: "Data Source=superheroes.db").
+  /// </param>
   /// <param name="enableSensitiveDataLogging">
   /// Habilita o log de dados sensíveis do EF Core (valores de parâmetros em logs/exceções).
   /// Deve ser habilitado apenas em ambiente de desenvolvimento, nunca em produção, pois pode
   /// vazar dados pessoais em logs e telemetria.
   /// </param>
-  public static IServiceCollection AddInfrastructure(this IServiceCollection services, bool enableSensitiveDataLogging = false)
+  public static IServiceCollection AddInfrastructure(
+      this IServiceCollection services,
+      string connectionString = "Data Source=superheroes.db",
+      bool enableSensitiveDataLogging = false)
   {
     services.AddDbContext<SuperDbContext>(options =>
     {
-      options.UseInMemoryDatabase("SuperHeroesDB");
+      options.UseSqlite(connectionString);
 
       if (enableSensitiveDataLogging)
       {

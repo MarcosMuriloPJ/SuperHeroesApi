@@ -5,8 +5,10 @@ using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using SuperHeroesApi.Infrastructure.Data;
 
@@ -34,6 +36,16 @@ namespace SuperHeroesApi.Tests.Integration
     // AddDbContext registra DbContextOptions com ciclo de vida "Scoped" por padrão.
     private readonly string _databaseName = $"SuperHeroesDB-Tests-{Guid.NewGuid()}";
 
+    // Provedor de serviços isolado, dedicado exclusivamente ao provider InMemory do EF Core.
+    // A aplicação em produção registra o provider Sqlite (via AddInfrastructure); se o
+    // DbContext de teste resolvesse os serviços internos do EF Core a partir do container
+    // principal da aplicação, o EF Core encontraria marcadores de dois providers distintos
+    // (Sqlite e InMemory) registrados simultaneamente e lançaria uma exceção. Usar um
+    // ServiceProvider próprio (via UseInternalServiceProvider) evita esse conflito.
+    private readonly IServiceProvider _inMemoryServiceProvider = new ServiceCollection()
+        .AddEntityFrameworkInMemoryDatabase()
+        .BuildServiceProvider();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
       builder.UseEnvironment("Testing");
@@ -57,14 +69,18 @@ namespace SuperHeroesApi.Tests.Integration
 
       builder.ConfigureServices(services =>
       {
-        var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<SuperDbContext>));
-        if (descriptor != null)
-        {
-          services.Remove(descriptor);
-        }
+        // Remove todas as configurações de DbContextOptions registradas por AddInfrastructure
+        // (incluindo o provider Sqlite). A partir do EF Core 6, chamadas sucessivas de
+        // AddDbContext para o mesmo TContext são combinadas (não substituídas), então é
+        // necessário remover também IDbContextOptionsConfiguration<T> - caso contrário, a
+        // configuração Sqlite original permaneceria acumulada junto com a configuração
+        // InMemory do teste, quebrando IsRelational()/Migrate() no host de testes.
+        services.RemoveAll<DbContextOptions<SuperDbContext>>();
+        services.RemoveAll<IDbContextOptionsConfiguration<SuperDbContext>>();
 
         services.AddDbContext<SuperDbContext>(options =>
-            options.UseInMemoryDatabase(_databaseName));
+            options.UseInMemoryDatabase(_databaseName)
+                   .UseInternalServiceProvider(_inMemoryServiceProvider));
       });
     }
 

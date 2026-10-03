@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using SuperHeroesApi.Application.DTOs;
 using SuperHeroesApi.Application.Services;
 
@@ -8,7 +9,8 @@ namespace SuperHeroesApi.WebAPI.Controllers
   /// Controller para gerenciamento de superpoderes
   /// </summary>
   [ApiController]
-  [Route("api/[controller]")]
+  [ApiVersion("1.0")]
+  [Route("api/v{version:apiVersion}/[controller]")]
   public class SuperpowersController(ISuperpowerService superpowerService) : ControllerBase
   {
     /// <summary>

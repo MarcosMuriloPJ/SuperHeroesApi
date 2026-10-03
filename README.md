@@ -61,7 +61,9 @@ O projeto é composto pelas seguintes entidades principais:
 
 - **.NET Core 8**: Framework principal
 - **Entity Framework Core**: ORM para acesso a dados
-- **Entity Framework InMemory**: Banco de dados em memória para desenvolvimento e testes
+- **SQLite**: Banco de dados relacional, com esquema versionado via EF Core Migrations
+- **Asp.Versioning**: Versionamento de API por segmento de URL (ex.: `/api/v1/heroes`)
+- **Health Checks**: Endpoint `/health` para monitoramento de disponibilidade da API e do banco
 - **Swagger/OpenAPI**: Documentação automática da API com suporte a XML comments
 - **XUnit**: Framework de testes unitários
 - **ASP.NET Core**: Framework web para APIs REST
@@ -73,19 +75,29 @@ O projeto é composto pelas seguintes entidades principais:
 
 ## 💾 Banco de Dados
 
-Este projeto utiliza o **Entity Framework Core InMemory** como provedor de banco de dados, o que significa que:
+Este projeto utiliza o **SQLite** como banco de dados relacional, com o esquema controlado por
+**EF Core Migrations**:
 
-- **Não é necessário configurar um servidor de banco de dados** - Todos os dados são armazenados em memória
-- **Dados são inicializados automaticamente** - O banco é populado com dados de exemplo ao iniciar a aplicação
-- **Ideal para desenvolvimento e testes** - Facilita o desenvolvimento sem dependências externas
-- **Configuração otimizada** - Inclui EnableSensitiveDataLogging e NoTracking para melhor desempenho
+- **Persistência real em arquivo** - Os dados são armazenados em `superheroes.db` (produção) ou
+  `superheroes.dev.db` (desenvolvimento), configurável via `ConnectionStrings:DefaultConnection`
+- **Migrations aplicadas automaticamente** - Ao iniciar, a aplicação executa `Database.Migrate()`
+  para criar/atualizar o esquema
+- **Seed Data** - 10 superpoderes são pré-cadastrados automaticamente via migration
+- **Relacionamentos** - Suporta relacionamentos complexos entre entidades, com índice único no
+  nome de herói
 
-### Características do Banco em Memória
+### Gerando novas migrations
 
-- **Persistência temporária** - Os dados existem apenas durante a execução da aplicação
-- **Seed Data** - 10 superpoderes são pré-cadastrados automaticamente
-- **Relacionamentos** - Suporta relacionamentos complexos entre entidades
-- **Testes isolados** - Cada teste utiliza uma instância isolada do banco de dados
+```bash
+cd src/SuperHeroesApi.Infrastructure
+dotnet ef migrations add NomeDaMigration --output-dir Data/Migrations
+```
+
+### Testes
+
+Os testes de repositório/serviço utilizam o provedor **InMemory** do EF Core para isolamento e
+velocidade; testes dedicados de infraestrutura (`SqliteInfrastructureTests`) validam as
+migrations e o comportamento real do SQLite.
 
 ## 🚀 Como Executar
 
@@ -123,49 +135,57 @@ A API estará disponível em:
 
 ## 📚 Documentação da API
 
+Todas as rotas são versionadas por segmento de URL (ex.: `/api/v1/heroes`). A versão atual é a `v1`.
+
 ### Endpoints Disponíveis
 
 #### Super-heróis
 
-- `GET /api/heroes` - Lista todos os super-heróis
+- `GET /api/v1/heroes` - Lista super-heróis de forma paginada, com filtros e ordenação
 
-  - Retorna uma lista completa de heróis com seus respectivos superpoderes
-  - Suporta resposta vazia quando não há heróis cadastrados
+  - Parâmetros de query: `page` (padrão 1), `pageSize` (padrão 10, máx. 50), `name`, `heroName`,
+    `superpowerId`, `sortBy` (`Name`, `HeroName`, `Birthdate`, `Height` ou `Weight`) e
+    `sortDescending`
+  - Retorna um objeto paginado: `{ items, page, pageSize, totalCount, totalPages }`
 
-- `GET /api/heroes/{id}` - Obtém um super-herói por ID
+- `GET /api/v1/heroes/{id}` - Obtém um super-herói por ID
 
   - Retorna detalhes completos de um herói específico
   - Retorna 404 quando o herói não é encontrado
   - Retorna 400 para IDs inválidos
 
-- `POST /api/heroes` - Cadastra um novo super-herói
+- `POST /api/v1/heroes` - Cadastra um novo super-herói
 
   - Valida todos os campos obrigatórios
   - Verifica se o nome de herói já existe
   - Valida se os superpoderes informados existem
   - Retorna o herói criado com seu ID gerado
 
-- `PUT /api/heroes/{id}` - Atualiza um super-herói existente
+- `PUT /api/v1/heroes/{id}` - Atualiza um super-herói existente
 
   - Permite atualização parcial ou completa dos dados
   - Mantém as mesmas validações do cadastro
   - Retorna 404 quando o herói não é encontrado
 
-- `DELETE /api/heroes/{id}` - Exclui um super-herói
+- `DELETE /api/v1/heroes/{id}` - Exclui um super-herói
   - Remove o herói e suas associações com superpoderes
   - Retorna 404 quando o herói não é encontrado
 
 #### Superpoderes
 
-- `GET /api/superpowers` - Lista todos os superpoderes disponíveis
+- `GET /api/v1/superpowers` - Lista todos os superpoderes disponíveis
   - Retorna nome, descrição e ID de cada superpoder
+
+#### Monitoramento
+
+- `GET /health` - Health check da aplicação e da conectividade com o banco de dados
 
 ### Exemplo de Uso
 
 #### Cadastrar um novo herói:
 
 ```bash
-curl -X POST http://localhost:5000/api/heroes \
+curl -X POST http://localhost:5000/api/v1/heroes \
   -H "Content-Type: application/json" \
   -d '{
     "nome": "Clark Kent",
@@ -177,10 +197,10 @@ curl -X POST http://localhost:5000/api/heroes \
   }'
 ```
 
-#### Listar todos os heróis:
+#### Listar heróis paginados, filtrados e ordenados:
 
 ```bash
-curl http://localhost:5000/api/heroes
+curl "http://localhost:5000/api/v1/heroes?page=1&pageSize=5&heroName=man&sortBy=HeroName&sortDescending=false"
 ```
 
 ## 🧪 Testes

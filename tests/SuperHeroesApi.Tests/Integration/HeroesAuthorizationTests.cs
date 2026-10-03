@@ -32,7 +32,7 @@ namespace SuperHeroesApi.Tests.Integration
     {
       var client = _factory.CreateClient();
 
-      var response = await client.PostAsJsonAsync("/api/heroes", BuildValidCreateDto());
+      var response = await client.PostAsJsonAsync("/api/v1/heroes", BuildValidCreateDto());
 
       Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -42,7 +42,7 @@ namespace SuperHeroesApi.Tests.Integration
     {
       var client = _factory.CreateClient();
 
-      var response = await client.PutAsJsonAsync("/api/heroes/1", BuildValidCreateDto());
+      var response = await client.PutAsJsonAsync("/api/v1/heroes/1", BuildValidCreateDto());
 
       Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -52,7 +52,7 @@ namespace SuperHeroesApi.Tests.Integration
     {
       var client = _factory.CreateClient();
 
-      var response = await client.DeleteAsync("/api/heroes/1");
+      var response = await client.DeleteAsync("/api/v1/heroes/1");
 
       Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -63,7 +63,7 @@ namespace SuperHeroesApi.Tests.Integration
       var client = _factory.CreateClient();
       client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_factory.CreateExpiredToken()}");
 
-      var response = await client.PostAsJsonAsync("/api/heroes", BuildValidCreateDto());
+      var response = await client.PostAsJsonAsync("/api/v1/heroes", BuildValidCreateDto());
 
       Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -74,7 +74,7 @@ namespace SuperHeroesApi.Tests.Integration
       var client = _factory.CreateClient();
       client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_factory.CreateTokenSignedWithWrongKey()}");
 
-      var response = await client.PostAsJsonAsync("/api/heroes", BuildValidCreateDto());
+      var response = await client.PostAsJsonAsync("/api/v1/heroes", BuildValidCreateDto());
 
       Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -85,7 +85,7 @@ namespace SuperHeroesApi.Tests.Integration
       var client = _factory.CreateClient();
       client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_factory.CreateValidToken()}");
 
-      var response = await client.PostAsJsonAsync("/api/heroes", BuildValidCreateDto());
+      var response = await client.PostAsJsonAsync("/api/v1/heroes", BuildValidCreateDto());
 
       Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -96,15 +96,15 @@ namespace SuperHeroesApi.Tests.Integration
       var client = _factory.CreateClient();
       client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_factory.CreateValidToken()}");
 
-      var createResponse = await client.PostAsJsonAsync("/api/heroes", BuildValidCreateDto());
+      var createResponse = await client.PostAsJsonAsync("/api/v1/heroes", BuildValidCreateDto());
       createResponse.EnsureSuccessStatusCode();
       var created = await createResponse.Content.ReadFromJsonAsync<CreatedHeroEnvelope>();
       Assert.NotNull(created);
 
-      var updateResponse = await client.PutAsJsonAsync($"/api/heroes/{created!.Data.Id}", BuildValidCreateDto());
+      var updateResponse = await client.PutAsJsonAsync($"/api/v1/heroes/{created!.Data.Id}", BuildValidCreateDto());
       Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-      var deleteResponse = await client.DeleteAsync($"/api/heroes/{created.Data.Id}");
+      var deleteResponse = await client.DeleteAsync($"/api/v1/heroes/{created.Data.Id}");
       Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
     }
 
@@ -114,7 +114,7 @@ namespace SuperHeroesApi.Tests.Integration
       // Leitura permanece pública nesta correção; garante que não houve regressão nos GETs.
       var client = _factory.CreateClient();
 
-      var response = await client.GetAsync("/api/heroes");
+      var response = await client.GetAsync("/api/v1/heroes");
 
       Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

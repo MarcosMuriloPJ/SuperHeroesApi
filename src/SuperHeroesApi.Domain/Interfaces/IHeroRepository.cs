@@ -61,6 +61,26 @@ namespace SuperHeroesApi.Domain.Interfaces
     /// <param name="excludeId">ID opcional a ser excluído da verificação (útil em atualizações)</param>
     /// <returns>True se o nome de herói já existir, False caso contrário</returns>
     Task<bool> HeroNameExistsAsync(string nomeHeroi, int? excludeId = null);
+
+    /// <summary>
+    /// Obtém heróis de forma paginada, com filtros e ordenação opcionais
+    /// </summary>
+    /// <param name="page">Número da página (1-based)</param>
+    /// <param name="pageSize">Quantidade de itens por página</param>
+    /// <param name="name">Filtro opcional por nome civil (contém, case-insensitive)</param>
+    /// <param name="heroName">Filtro opcional por nome de herói (contém, case-insensitive)</param>
+    /// <param name="superpowerId">Filtro opcional pelo ID de um superpoder que o herói deve possuir</param>
+    /// <param name="sortBy">Campo de ordenação: "Name", "HeroName", "Birthdate", "Height" ou "Weight"</param>
+    /// <param name="sortDescending">Define se a ordenação é decrescente</param>
+    /// <returns>Tupla com os itens da página e a contagem total de itens (sem paginação)</returns>
+    Task<(IEnumerable<Hero> Items, int TotalCount)> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name,
+        string? heroName,
+        int? superpowerId,
+        string sortBy,
+        bool sortDescending);
   }
 }
 
